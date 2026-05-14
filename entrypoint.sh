@@ -32,43 +32,6 @@ environment=
   KOMARI_ENABLE_CLOUDFLARED="${KOMARI_ENABLE_CLOUDFLARED:-false}"
 SUP
 
-# ── Komari Agent（自我监控）──
-if [ -n "$KOMARI_AGENT_SERVER" ] && [ -n "$KOMARI_AGENT_TOKEN" ]; then
-    # 优先用安装脚本（install.sh）下载的位置，不存在则下到持久化目录
-    if [ -f "/opt/komari/agent" ]; then
-        AGENT_BIN="/opt/komari/agent"
-        echo "[INFO] Komari Agent found at ${AGENT_BIN}"
-    else
-        AGENT_BIN="/app/data/komari-agent"
-        if [ ! -f "$AGENT_BIN" ]; then
-            echo "[INFO] Downloading komari-agent to ${AGENT_BIN}..."
-            case "$(uname -m)" in
-                x86_64|amd64) ARCH="amd64" ;;
-                aarch64|arm64) ARCH="arm64" ;;
-                *) echo "[WARN] Unknown arch, agent not downloaded"; AGENT_BIN="" ;;
-            esac
-            if [ -n "$AGENT_BIN" ]; then
-                curl -sL "https://github.com/komari-monitor/komari-agent/releases/latest/download/komari-agent-linux-${ARCH}" \
-                    -o "$AGENT_BIN" && chmod +x "$AGENT_BIN"
-            fi
-        fi
-    fi
-
-    if [ -f "$AGENT_BIN" ]; then
-        TLS_FLAG=""
-        [ -n "$KOMARI_AGENT_TLS" ] && TLS_FLAG="--tls"
-        cat > "$CONF_DIR/agent.conf" << SUP
-[program:komari-agent]
-command=${AGENT_BIN} -e ${KOMARI_AGENT_SERVER} -t ${KOMARI_AGENT_TOKEN} ${TLS_FLAG} --disable-auto-update
-autorestart=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
-SUP
-        echo "[INFO] Komari Agent enabled -> ${KOMARI_AGENT_SERVER}"
-    fi
-fi
 
 # ── Cloudflare Tunnel ──
 if [ -z "$TUNNEL_TOKEN" ]; then
