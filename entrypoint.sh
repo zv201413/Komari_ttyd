@@ -57,7 +57,7 @@ for var in $(compgen -A variable | grep -E '^TTYD_P[0-9]+$' | sort); do
     name="ttyd_${var#TTYD_P}"
     cat > "$CONF_DIR/${name}.conf" << SUP
 [program:$name]
-command=/usr/local/bin/ttyd -c $user:$pass -p $port bash
+    command=/usr/local/bin/ttyd -c $user:$pass -p $port -W bash
 autorestart=true
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
