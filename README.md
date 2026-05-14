@@ -1,154 +1,113 @@
 # Komari_ttyd
 
-一个 Docker 镜像，同时运行 **Komari 监控面板 + 网页终端（TTYD）**，多个平台均可部署。
+这是一个高度精简的 Docker 镜像，在极低资源占用的前提下，同时运行 **Komari 监控面板** 与 **网页终端（TTYD）**。
+
+> **注意**：为了保证容器在各大 PaaS 平台上的极致兼容性，本镜像**已剔除**内置的 Komari Agent。探针请在独立的宿主机或容器中运行。
 
 ---
 
-## 🚀 Northflank 部署（最简单，自带 SSL）
+## 🚀 推荐部署方案：Northflank（最简单，自带 SSL）
 
-Northflank 自动分配 HTTPS 域名，无需 Tunnel、无需证书配置。
+Northflank 会自动为应用分配带 HTTPS 的专属域名。**不需要配置 Tunnel，也不需要搞证书**，这是最推荐的部署方式。
 
-### 1. 创建应用
+### 1. 创建应用 (Service)
 
-| 设置项 | 填什么 |
+在 Northflank 创建一个 Service，选择 Docker image 模式，并按以下参数配置：
+
+| 设置项 | 填写内容 |
 |--------|--------|
-| 镜像地址 | `ghcr.io/zv201413/komari_ttyd:latest` |
-| 端口 1 | `80` → Komari 面板 |
-| 端口 2 | `7681` → TTYD 网页终端（可选） |
-| 持久化目录 | `/app/data` ← 不设的话重启面板数据全丢 |
-| 环境变量 | `TTYD_P1=7681:admin:你的密码` |
-| | `ADMIN_USERNAME=admin` |
-| | `ADMIN_PASSWORD=你的密码` |
+| **镜像地址** | `ghcr.io/zv201413/komari_ttyd:latest` |
+| **端口 1 (Port)** | `80` (用于访问 Komari 面板) |
+| **端口 2 (Port)** | `7681` (如果需要用到 TTYD 网页终端) |
+| **持久化存储 (Volume)** | 挂载路径填 `/app/data`（必填，否则容器重启面板数据全丢） |
 
-### 2. 访问
+**环境变量 (Variables)**：
 
-| 用途 | 地址 |
-|------|------|
-| Komari 面板 | `https://xxx.northflank.app`（平台分配） |
-| TTYD 终端 | `https://xxx.northflank.app`（平台分配） |
+| 变量名 | 值 | 说明 |
+|--------|----|------|
+| `ADMIN_USERNAME` | `admin` | 面板登录账号（可选，不设默认随机生成） |
+| `ADMIN_PASSWORD` | `你的复杂密码` | 面板登录密码（可选，不设默认随机生成） |
+| `TTYD_P1` | `7681:admin:你的密码` | 网页终端账号密码（需要 TTYD 时填写） |
 
-> **无需填 `TUNNEL_TOKEN`**，这是最简单的方式。
+### 2. 访问面板
 
----
-
-## 准备工作（Tunnel 方式需要）
-
-拿到 Tunnel Token（一串以 eyJ... 开头的字符）：
-
-1. 打开 [https://one.dash.cloudflare.com](https://one.dash.cloudflare.com)
-2. **Networks** → **Tunnels** → **Add a tunnel** → 选 Cloudflared → 起个名字
-3. 到 **Public Hostname** 页面点 **Save tunnel**
-4. 回到隧道列表，点隧道 → `...` → **View tunnel token**
-5. 复制那串 `eyJ...` 开头的字符
-
-> 这串 token 不要泄露给别人。
+部署成功后，查看 Northflank 分配的域名（通常在右上角）：
+- **Komari 面板**：`https://xxx.northflank.app`
+- **TTYD 终端**：`https://xxx.northflank.app:7681` （如果启用了端口 2）
 
 ---
 
-## 环境变量
+## ☁️ 其他 PaaS 平台（如 爪云, Zeabur 等）
 
-### 方式 A：使用 Cloudflare Tunnel
+如果平台不自动提供 SSL 域名，或者不支持暴露多个端口，推荐使用 **Cloudflare Tunnel** 进行内网穿透。
 
-| 变量 | 必填 | 说明 |
-|------|------|------|
-| `TUNNEL_TOKEN` | ✅ | Cloudflare Tunnel Token |
-| `TTYD_P1` | ❌ | 网页终端，格式 `端口:用户名:密码` |
-| `TTYD_P2` | ❌ | 第二个网页终端（支持 P3、P4...） |
-| `ADMIN_USERNAME` | ❌ | Komari 管理员用户名，默认自动生成 |
-| `ADMIN_PASSWORD` | ❌ | Komari 管理员密码，不设则自动生成（看日志） |
+### 前置准备：获取 Tunnel Token
+1. 登录 Cloudflare Zero Trust 面板。
+2. 导航到 **Networks** → **Tunnels** → **Add a tunnel** (选择 Cloudflared)。
+3. 在 Public Hostname 页面点击 **Save tunnel**。
+4. 回到列表，点击该隧道对应的 `...` 菜单 → **View tunnel token**。
+5. 复制那串 `eyJ...` 开头的极长字符。**切记保密**。
 
+### 平台配置
 
-```bash
-TUNNEL_TOKEN=eyJhIjoi...
-TTYD_P1=7681:admin:123456
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=你的密码
-```
-
-### 方式 B：直接开 TCP 端口（不需要 Tunnel）
-
-| 变量 | 必填 | 说明 |
-|------|------|------|
-| `TTYD_P1` | ❌ | 网页终端，格式 `端口:用户名:密码` |
-| `ADMIN_USERNAME` | ❌ | Komari 管理员用户名，默认自动生成 |
-| `ADMIN_PASSWORD` | ❌ | Komari 管理员密码，不设则自动生成（看日志） |
-
-
-```bash
-TTYD_P1=7681:admin:123456
-```
-
----
-
-## 部署
-
-### 无SSL证书等 PaaS 平台（爪云、justrunmy.app、Zeabur 等）
-
-#### 方案 A：走 Cloudflare Tunnel
-
-| 设置项 | 填什么 |
+| 设置项 | 填写内容 |
 |--------|--------|
-| 镜像地址 | `ghcr.io/zv201413/komari_ttyd:latest` |
-| 端口 | `80` |
-| 持久化目录 | `/app/data` |
-| 环境变量 | `TUNNEL_TOKEN=你的token` `TTYD_P1=7681:admin:你的密码` |
+| **镜像地址** | `ghcr.io/zv201413/komari_ttyd:latest` |
+| **持久化目录** | 挂载到 `/app/data` |
+| **环境变量** | `TUNNEL_TOKEN=eyJh...` (你的 Token)<br>`TTYD_P1=7681:admin:密码`<br>`ADMIN_USERNAME=admin`<br>`ADMIN_PASSWORD=密码` |
 
-Cloudflare 面板加 Public Hostname：
+**配置域名解析**：
+去 Cloudflare Tunnel 面板的 Public Hostname 里，添加两条记录：
+- `komari.你的域名.com` → 指向 `http://localhost:80`
+- `ttyd.你的域名.com` → 指向 `http://localhost:7681`
 
-| 域名 | 服务 |
-|------|------|
-| `komari.你的域名.com` | `localhost:80` |
-| `ttyd.你的域名.com` | `localhost:7681` |
+---
 
-#### 方案 B：直接开 TCP 端口
+## 💻 自建服务器部署 (Docker)
 
-| 设置项 | 填什么 |
-|--------|--------|
-| 镜像地址 | `ghcr.io/zv201413/komari_ttyd:latest` |
-| 端口 | `80`（+ `7681` 如果需要 TTYD）|
-| 持久化目录 | `/app/data` |
-| 环境变量 | `TTYD_P1=7681:admin:你的密码` **不填 TUNNEL_TOKEN** |
-
-> TTYD 需要平台支持暴露多个端口。
-
-### 自建服务器
+如果你有自己的 VPS，直接一条命令跑起来即可（也可搭配 Tunnel 使用）：
 
 ```bash
 docker run -d --name komari \
-  -p 80:80 \
-  -v /app/data:/app/data \
-  -e TUNNEL_TOKEN=eyJhIjoi... \
-  -e TTYD_P1=7681:admin:123456 \
+  --restart unless-stopped \
+  -p 8000:80 \
+  -p 7681:7681 \
+  -v /opt/komari/data:/app/data \
+  -e ADMIN_USERNAME=admin \
+  -e ADMIN_PASSWORD=你的复杂密码 \
+  -e TTYD_P1=7681:admin:你的终端密码 \
   ghcr.io/zv201413/komari_ttyd:latest
 ```
 
+*(访问 `http://你的IP:8000` 即可进入面板。)*
+
 ---
 
-## 首次登录
+## 🔐 首次登录必看
 
-Komari **没有固定默认密码**。
+Komari 强调安全性，**没有固定的默认密码**。
 
-### 从日志查看
-去平台看容器日志，搜索 `admin` 或 `password`：
-```
+### 方式一：指定环境变量（推荐）
+在部署时直接通过环境变量写死账号密码：
+- `ADMIN_USERNAME=admin`
+- `ADMIN_PASSWORD=你的复杂密码`
+
+### 方式二：查看随机生成的密码
+如果你部署时没填环境变量，Komari 会在初次启动时随机生成密码。去你的部署平台查看 **容器日志 (Logs)**，寻找以下字样：
+```text
 Admin username: admin
 Admin password: xxxxxx
 ```
 
-### 环境变量指定（推荐）
-部署时加上 `ADMIN_USERNAME` 和 `ADMIN_PASSWORD`，用你设的密码直接登录。
-
 ---
 
+## 🛠 高级设置：多个 TTYD 终端
 
-
-## 添加更多 TTYD
+如果需要开多个相互独立的网页终端供不同用户使用，可以继续添加环境变量：
 
 ```bash
 TTYD_P1=7681:admin:密码1
 TTYD_P2=7682:user2:密码2
+TTYD_P3=7683:user3:密码3
 ```
-
-每加一个，Cloudflare 面板加一条 Public Hostname 指向对应端口。
-
----
+*注意：增加端口后，记得在部署平台或 Cloudflare Tunnel 中放行对应的端口号。*
