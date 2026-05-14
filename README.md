@@ -62,14 +62,17 @@
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `TUNNEL_TOKEN` | ✅ | 上面拿到的那串 eyJ... 开头的 token |
+| `TUNNEL_TOKEN` | ✅ | Cloudflare Tunnel Token |
 | `TTYD_P1` | ❌ | 网页终端，格式 `端口:用户名:密码` |
 | `TTYD_P2` | ❌ | 第二个网页终端（支持 P3、P4...） |
+| `ADMIN_USERNAME` | ❌ | Komari 管理员用户名，默认自动生成 |
+| `ADMIN_PASSWORD` | ❌ | Komari 管理员密码，不设则自动生成（看日志） |
 
 ```bash
 TUNNEL_TOKEN=eyJhIjoi...
 TTYD_P1=7681:admin:123456
-TTYD_P2=7682:root:abcdef
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=你的密码
 ```
 
 ### 方式 B：直接开 TCP 端口（不需要 Tunnel）
@@ -79,6 +82,8 @@ TTYD_P2=7682:root:abcdef
 | 变量 | 必填 | 说明 |
 |------|------|------|
 | `TTYD_P1` | ❌ | 网页终端，格式 `端口:用户名:密码` |
+| `ADMIN_USERNAME` | ❌ | Komari 管理员用户名，默认自动生成 |
+| `ADMIN_PASSWORD` | ❌ | Komari 管理员密码，不设则自动生成（看日志） |
 
 ```bash
 # 不需要 TUNNEL_TOKEN
@@ -169,10 +174,25 @@ docker run -d --name komari \
 
 ## 首次登录
 
+Komari **没有固定默认密码**，首次启动自动生成。
+
+### 方式 A：从日志查看
+部署完成后去平台看容器日志，搜索 `admin` 或 `password`，找到类似：
+```
+Admin username: admin
+Admin password: xxxxxx
+```
+
+### 方式 B：环境变量指定密码（推荐）
+部署时加上以下环境变量，密码就是你指定的，不用翻日志：
+
+| 变量 | 示例 |
+|------|------|
+| `ADMIN_USERNAME` | `admin` |
+| `ADMIN_PASSWORD` | `你设的密码` |
+
 1. 打开 `https://komari.你的域名.com`
-2. **账号密码在哪看？** 这步不同方式不一样：
-   - **PaaS 平台**：去平台的控制台看容器日志，里面有 `admin` 的初始密码
-   - **自建服务器**：执行 `docker logs komari 2>&1 \| grep -i "admin"`
+2. 用你设置的用户名密码登录
 3. 登录后**立即修改密码**（点右上角头像 → 设置）
 4. 接下来可以添加服务器（Agent）进行监控了
 
