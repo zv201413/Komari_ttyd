@@ -58,7 +58,7 @@
 
 ## 环境变量（配置参数）
 
-部署时需要填以下参数：
+### 方式 A：使用 Cloudflare Tunnel（默认）
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
@@ -66,16 +66,30 @@
 | `TTYD_P1` | ❌ | 网页终端，格式 `端口:用户名:密码` |
 | `TTYD_P2` | ❌ | 第二个网页终端（支持 P3、P4...） |
 
-### 示例
-
 ```bash
-# 最少只需要填这一个
 TUNNEL_TOKEN=eyJhIjoi...
-
-# 如果需要网页终端，加上
 TTYD_P1=7681:admin:123456
 TTYD_P2=7682:root:abcdef
 ```
+
+### 方式 B：直接开 TCP 端口（不需要 Tunnel）
+
+如果你的 PaaS 平台支持直接暴露 TCP 端口（比如给你分配了一个域名+端口），可以**不填 `TUNNEL_TOKEN`**，cloudflared 不会启动。
+
+| 变量 | 必填 | 说明 |
+|------|------|------|
+| `TTYD_P1` | ❌ | 网页终端，格式 `端口:用户名:密码` |
+
+```bash
+# 不需要 TUNNEL_TOKEN
+TTYD_P1=7681:admin:123456
+```
+
+| 跟 Tunnel 方案的区别 | |
+|-------------------|---|
+| ✅ 更简单，少一个配置项 | |
+| ❌ 服务器 IP/端口公开暴露 | |
+| ❌ Agent 连接地址用平台分配的域名，不是你能控制的 | |
 
 ---
 
@@ -84,6 +98,8 @@ TTYD_P2=7682:root:abcdef
 ### 方式一：在 PaaS 平台部署（推荐新手）
 
 适用：爪云、justrunmy.app、Zeabur 等。
+
+#### 方案 A：走 Cloudflare Tunnel（需 TUNNEL_TOKEN）
 
 1. **创建应用**，填入：
 
@@ -96,7 +112,7 @@ TTYD_P2=7682:root:abcdef
 
 2. **添加域名映射**（Cloudflare Zero Trust 面板）：
 
-   打开 [https://one.dash.cloudflare.com](https://one.dash.cloudflare.com) → Networks → Tunnels → 点你的隧道 → **Add a public hostname**：
+    打开 [https://one.dash.cloudflare.com](https://one.dash.cloudflare.com) → Networks → Tunnels → 点你的隧道 → **Add a public hostname**：
 
    | 域名 | 服务 |
    |------|------|
@@ -109,6 +125,30 @@ TTYD_P2=7682:root:abcdef
    |------|------|
    | Komari 面板 | `https://komari.你的域名.com` |
    | 网页终端 | `https://ttyd.你的域名.com` |
+
+#### 方案 B：直接开 TCP 端口（不需要 Tunnel）
+
+如果平台支持直接暴露 TCP 端口（比如给你一个 `xxxx.paas.com` 域名），可以不用 Tunnel：
+
+1. **创建应用**，填入：
+
+   | 设置项 | 填什么 |
+   |--------|--------|
+   | 镜像地址 | `ghcr.io/zv201413/komari_ttyd:latest` |
+   | 端口 | `80` |
+   | 环境变量 | `TTYD_P1=7681:admin:你的密码` |
+   | | **不填 TUNNEL_TOKEN** |
+
+2. 平台会给你一个域名，比如 `komari-xxxx.paas.com`
+
+3. **访问**：
+
+   | 用途 | 地址 |
+   |------|------|
+   | Komari 面板 | `https://komari-xxxx.paas.com` |
+   | 网页终端 | `https://komari-xxxx.paas.com:7681` |
+
+   > **Agent 怎么连？** 在 Komari 面板设置里，对接地址填平台给你的域名，端口填 80（或 443，看平台是否支持 HTTPS）。
 
 ### 方式二：在自己的服务器上运行
 
