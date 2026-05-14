@@ -82,7 +82,7 @@ TTYD_P1=7681:admin:123456
 
 ## 部署
 
-### PaaS 平台（爪云、justrunmy.app、Zeabur 等）
+### 无SSL证书等 PaaS 平台（爪云、justrunmy.app、Zeabur 等）
 
 #### 方案 A：走 Cloudflare Tunnel
 
