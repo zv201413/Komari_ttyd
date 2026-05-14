@@ -148,6 +148,8 @@ TTYD_P1=7681:admin:123456
    | Komari 面板 | `https://komari-xxxx.paas.com` |
    | 网页终端 | `https://komari-xxxx.paas.com:7681` |
 
+   > **注意**：这种方式下，`TTYD_P1` 的端口（如 7681）**不会被暴露**，外面无法访问网页终端。如果需要 TTYD，确认平台支持暴露多个端口，或者不用 TTYD。
+   >
    > **Agent 怎么连？** 在 Komari 面板设置里，对接地址填平台给你的域名，端口填 80（或 443，看平台是否支持 HTTPS）。
 
 ### 方式二：在自己的服务器上运行
