@@ -89,7 +89,7 @@ TTYD_P2=7682:root:abcdef
 
    | 设置项 | 填什么 |
    |--------|--------|
-   | 镜像地址 | `ghcr.io/zv201413/komari_ttyd/komari-ttyd:latest` |
+   | 镜像地址 | `ghcr.io/zv201413/komari_ttyd:latest` |
    | 端口 | `80` |
    | 环境变量 | `TUNNEL_TOKEN=你拿到的token` |
    | | `TTYD_P1=7681:admin:你的密码` |
@@ -118,7 +118,7 @@ docker run -d --name komari \
   -v /app/data:/app/data \
   -e TUNNEL_TOKEN=eyJhIjoi... \
   -e TTYD_P1=7681:admin:123456 \
-  ghcr.io/zv201413/komari_ttyd/komari-ttyd:latest
+  ghcr.io/zv201413/komari_ttyd:latest
 ```
 
 ---
@@ -174,7 +174,7 @@ TTYD_P3=7683:user3:密码3
 PaaS 平台一般点重新部署就行。自建服务器：
 
 ```bash
-docker pull ghcr.io/zv201413/komari_ttyd/komari-ttyd:latest
+docker pull ghcr.io/zv201413/komari_ttyd:latest
 docker stop komari && docker rm komari
 # 重新运行上面的 docker run 命令
 ```
@@ -198,7 +198,7 @@ docker build -t komari-ttyd .
 或者 push 到 GitHub main 分支后，Actions 会自动构建推送到：
 
 ```
-ghcr.io/zv201413/komari_ttyd/komari-ttyd:latest
+ghcr.io/zv201413/komari_ttyd:latest
 ```
 
 ---
