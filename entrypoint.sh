@@ -32,6 +32,41 @@ environment=
   KOMARI_ENABLE_CLOUDFLARED="${KOMARI_ENABLE_CLOUDFLARED:-false}"
 SUP
 
+# ── Komari Agent（自我监控）──
+if [ -n "$KOMARI_AGENT_SERVER" ] && [ -n "$KOMARI_AGENT_TOKEN" ]; then
+    AGENT_DIR="/app/data"
+    AGENT_BIN="${AGENT_DIR}/komari-agent"
+
+    if [ ! -f "$AGENT_BIN" ]; then
+        echo "[INFO] Downloading komari-agent to ${AGENT_DIR}..."
+        # 检测架构
+        case "$(uname -m)" in
+            x86_64|amd64) ARCH="amd64" ;;
+            aarch64|arm64) ARCH="arm64" ;;
+            *) echo "[WARN] Unknown arch, agent not downloaded"; AGENT_BIN="" ;;
+        esac
+        if [ -n "$AGENT_BIN" ]; then
+            curl -sL "https://github.com/komari-monitor/komari-agent/releases/latest/download/komari-agent-linux-${ARCH}" \
+                -o "$AGENT_BIN" && chmod +x "$AGENT_BIN"
+        fi
+    fi
+
+    if [ -f "$AGENT_BIN" ]; then
+        TLS_FLAG=""
+        [ -n "$KOMARI_AGENT_TLS" ] && TLS_FLAG="--tls"
+        cat > "$CONF_DIR/agent.conf" << SUP
+[program:komari-agent]
+command=${AGENT_BIN} -e ${KOMARI_AGENT_SERVER} -t ${KOMARI_AGENT_TOKEN} ${TLS_FLAG} --disable-auto-update
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+SUP
+        echo "[INFO] Komari Agent enabled -> ${KOMARI_AGENT_SERVER}"
+    fi
+fi
+
 # ── Cloudflare Tunnel ──
 if [ -z "$TUNNEL_TOKEN" ]; then
     echo "[WARN] TUNNEL_TOKEN not set. Cloudflare Tunnel will not start."
