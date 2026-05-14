@@ -107,6 +107,7 @@ TTYD_P1=7681:admin:123456
    |--------|--------|
    | 镜像地址 | `ghcr.io/zv201413/komari_ttyd:latest` |
    | 端口 | `80` |
+   | 持久化目录 | `/app/data` ← 关键，否则重启面板配置全丢 |
    | 环境变量 | `TUNNEL_TOKEN=你拿到的token` |
    | | `TTYD_P1=7681:admin:你的密码` |
 
@@ -136,6 +137,7 @@ TTYD_P1=7681:admin:123456
    |--------|--------|
    | 镜像地址 | `ghcr.io/zv201413/komari_ttyd:latest` |
    | 端口 | `80` |
+   | 持久化目录 | `/app/data` ← 关键，否则重启面板配置全丢 |
    | 环境变量 | `TTYD_P1=7681:admin:你的密码` |
    | | **不填 TUNNEL_TOKEN** |
 
