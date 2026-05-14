@@ -25,7 +25,7 @@ Northflank 自动分配 HTTPS 域名，无需 Tunnel、无需证书配置。
 | 用途 | 地址 |
 |------|------|
 | Komari 面板 | `https://xxx.northflank.app`（平台分配） |
-| TTYD 终端 | `https://xxx.northflank.app:7681` |
+| TTYD 终端 | `https://xxx.northflank.app`（平台分配） |
 
 > **无需填 `TUNNEL_TOKEN`**，这是最简单的方式。
 
