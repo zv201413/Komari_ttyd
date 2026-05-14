@@ -152,13 +152,3 @@ TTYD_P2=7682:user2:密码2
 每加一个，Cloudflare 面板加一条 Public Hostname 指向对应端口。
 
 ---
-
-## 构建自己的镜像
-
-```bash
-git clone https://github.com/zv201413/Komari_ttyd.git
-cd Komari_ttyd
-docker build -t komari-ttyd .
-```
-
-Push 到 main 后 Actions 自动构建：`ghcr.io/zv201413/komari_ttyd:latest`
