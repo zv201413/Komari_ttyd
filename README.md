@@ -116,6 +116,93 @@ Admin password: xxxxxx
 
 ---
 
+## 🔔 配置 Telegram 通知
+
+Komari 内置通知系统，支持在服务器上下线时通过 Telegram 发送通知消息（v1.3.0+ 消息包含 IP、OS、地区、CPU 等详细信息）。
+
+### 前置条件
+
+你需要有一个 Telegram Bot Token 和 Chat ID：
+1. 在 Telegram 中搜索 [@BotFather](https://t.me/BotFather)，创建新机器人，获取 `BOT_TOKEN`
+2. 向你的机器人发送任意一条消息
+3. 访问 `https://api.telegram.org/bot<你的BOT_TOKEN>/getUpdates`，从返回的 JSON 中找到 `chat.id`
+
+### 方式一：内置 Telegram 发送器（推荐）
+
+登录 Komari 面板后：
+
+1. 进入 **设置 (Settings)** → **通知 (Notifications)**
+2. 开启 **启用通知 (Enable Notifications)**
+3. **通知方式 (Notification Method)** 选择 `telegram`
+4. 点击 **编辑配置 (Edit Configuration)**，填入：
+
+| 参数 | 值 |
+|------|------|
+| `bot_token` | `你的BOT_TOKEN` |
+| `chat_id` | `你的CHAT_ID` |
+| `endpoint` | `https://api.telegram.org/bot`（默认，无需修改） |
+| `message_thread_id` | 留空（仅超级群组话题需要） |
+
+5. 保存配置后，点击 **测试 (Test Send)** 验证是否收到消息
+
+### 方式二：JavaScript 发送器（高级）
+
+如果需要更灵活的消息格式（自定义排版、多平台通知等），可选择 `Javascript` 通知方式，编写自定义 JS 脚本：
+
+```javascript
+async function sendMessage(message, title) {
+  // 发送普通文本消息
+  const url = `https://api.telegram.org/bot<你的BOT_TOKEN>/sendMessage`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      chat_id: '<你的CHAT_ID>',
+      text: `<b>${title}</b>\n${message}`,
+      parse_mode: 'HTML'
+    })
+  });
+  return resp.ok;
+}
+
+async function sendEvent(event) {
+  // event 对象包含: event, clients, message, time, emoji
+  // clients[0] 包含完整客户端信息: name, ipv4, ipv6, os, arch, cpu_cores, region 等
+  const client = event.clients[0];
+  const text = `${event.emoji} ${client.name}\n`
+    + `IP: ${client.ipv4}\n`
+    + `OS: ${client.os}\n`
+    + `Event: ${event.event}\n`
+    + `Time: ${event.time}`;
+  return await sendMessage(text, event.event);
+}
+```
+
+### 通知模板
+
+当使用非 JavaScript 发送器（如内置 telegram）时，通知内容由 **通知模板 (Notification Template)** 控制。可在面板 **设置 → 通知** 中找到并自定义。
+
+默认模板：
+```
+{{emoji}}{{emoji}}{{emoji}}
+Event: {{event}}
+Clients: {{client}}
+Message: {{message}}
+Time: {{time}}
+```
+
+可用变量：
+
+| 变量 | 说明 | 示例值 |
+|------|------|--------|
+| `{{emoji}}` | 事件图标 | 🔴 🟢 🆕 |
+| `{{event}}` | 事件类型 | offline / online / registered |
+| `{{client}}` | 客户端名称 | myserver |
+| `{{message}}` | 详细消息（含 IP/OS/地区/CPU） | 🔴 myserver is offline\nIP: ... |
+| `{{time}}` | 事件时间 | 2026-05-18T12:00:00+08:00 |
+
+---
+
 ## 🛠 高级设置：多个 TTYD 终端
 
 如果需要开多个相互独立的网页终端供不同用户使用，可以继续添加环境变量：
