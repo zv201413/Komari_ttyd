@@ -6,16 +6,23 @@ WORKDIR /tmp
 
 RUN apk add --no-cache curl
 
-# ttyd
-RUN curl -SL https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 \
+# ttyd (multi-arch)
+RUN case "${TARGETARCH}" in \
+        amd64) TTYD_ARCH="x86_64" ;; \
+        arm64) TTYD_ARCH="aarch64" ;; \
+        arm) TTYD_ARCH="armhf" ;; \
+        386) TTYD_ARCH="i686" ;; \
+        *) echo "Unsupported arch: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
+    curl -SL "https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.${TTYD_ARCH}" \
     -o /usr/local/bin/ttyd && chmod +x /usr/local/bin/ttyd
 
 # cloudflared
 RUN curl -SL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${TARGETARCH} \
     -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 
-# Komari v1.2.1-hotfix (fork: zv201413/komari_new)
-RUN curl -SL https://github.com/zv201413/komari_new/releases/download/v1.2.1-hotfix/komari-linux-${TARGETARCH} \
+# Komari v1.3.0 (fork: zv201413/komari_new)
+RUN curl -SL https://github.com/zv201413/komari_new/releases/download/v1.3.0/komari-linux-${TARGETARCH} \
     -o /usr/local/bin/komari && chmod +x /usr/local/bin/komari
 
 FROM alpine:latest
