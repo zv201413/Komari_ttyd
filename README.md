@@ -5,7 +5,17 @@
 > **探针监控说明**：
 > 为了保证容器在各大 PaaS 平台上的极致兼容性，本镜像**已剔除**内置的 Komari Agent。如需监控服务器：
 > 1. **真实的 VPS / 虚拟机**：请直接使用官方后台复制的原始命令（`wget ... install.sh`）在宿主机运行，依赖 `systemd` 最稳定。
-> 2. **PaaS 平台 / 纯容器环境**：由于没有 `systemd`，官方脚本会报错。请将原始命令粘贴到 [Argosbx 转换面板](https://zv201413.github.io/argosbx-new/)，一键生成免 systemd 的 `nohup` 容器专用命令后再执行。
+> 2. **PaaS 平台 / 纯容器环境**：脚本自动检测无 systemd 时切换为 nohup 后台模式，无需转换。
+>
+> **通用安装命令（VPS/容器均可用）**：
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/zv201413/komari-agent_new/main/install.sh | bash -s -- -e 你的服务器地址:端口 -t 你的密钥
+> ```
+>
+> **管理命令（适用于无 systemd 的容器/PaaS）**：
+> ```bash
+> /opt/komari/agent.sh {start|stop|status|restart|logs}
+> ```
 <img width="1940" height="643" alt="image" src="https://github.com/user-attachments/assets/0b7b301b-c35a-4551-a628-17667712c88d" />
 
 
@@ -140,14 +150,14 @@ sudo systemctl daemon-reload
 sudo rm -rf /opt/nezha  # 或者是 /opt/komari
 ```
 
-### 场景二：纯容器/PaaS（使用 Argosbx 转换出的 nohup 绿色命令安装）
-如果你是用生成的 `wget ... && nohup ... &` 指令跑的，没有系统服务残留。
+### 场景二：纯容器/PaaS（使用通用安装命令或 nohup 模式）
+如果你是在无 systemd 的容器/PaaS 中使用通用安装脚本安装的，Agent 以 nohup 后台模式运行。
 
 **彻底卸载步骤**：
 ```bash
-# 1. 杀掉后台进程
-pkill -f nezha-agent    # 或 pkill -f komari-agent
+# 1. 使用管理脚本停止（推荐）
+/opt/komari/agent.sh stop
 
-# 2. 删除当前目录下的二进制程序和日志
-rm -f nezha-agent agent.log    # 或者是 komari-agent
+# 2. 删除整个安装目录
+rm -rf /opt/komari
 ```
