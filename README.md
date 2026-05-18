@@ -120,13 +120,6 @@ Admin password: xxxxxx
 
 Komari 内置通知系统，支持在服务器上下线时通过 Telegram 发送通知消息（v1.3.0+ 消息包含 IP、OS、地区、CPU 等详细信息）。
 
-### 前置条件
-
-你需要有一个 Telegram Bot Token 和 Chat ID：
-1. 在 Telegram 中搜索 [@BotFather](https://t.me/BotFather)，创建新机器人，获取 `BOT_TOKEN`
-2. 向你的机器人发送任意一条消息
-3. 访问 `https://api.telegram.org/bot<你的BOT_TOKEN>/getUpdates`，从返回的 JSON 中找到 `chat.id`
-
 ### 方式一：内置 Telegram 发送器（推荐）
 
 登录 Komari 面板后：
@@ -182,24 +175,22 @@ async function sendEvent(event) {
 
 当使用非 JavaScript 发送器（如内置 telegram）时，通知内容由 **通知模板 (Notification Template)** 控制。可在面板 **设置 → 通知** 中找到并自定义。
 
-默认模板：
+默认模板格式示例：
 ```
 {{emoji}}{{emoji}}{{emoji}}
-Event: {{event}}
-Clients: {{client}}
-Message: {{message}}
-Time: {{time}}
+事件：{{event}}
+服务器：{{client}}
+消息：{{message}}
+时间：{{time}}
 ```
 
 可用变量：
 
-| 变量 | 说明 | 示例值 |
-|------|------|--------|
-| `{{emoji}}` | 事件图标 | 🔴 🟢 🆕 |
-| `{{event}}` | 事件类型 | offline / online / registered |
-| `{{client}}` | 客户端名称 | myserver |
-| `{{message}}` | 详细消息（含 IP/OS/地区/CPU） | 🔴 myserver is offline\nIP: ... |
-| `{{time}}` | 事件时间 | 2026-05-18T12:00:00+08:00 |
+- `{{emoji}}` — 事件图标（🔴 🟢 🆕）
+- `{{event}}` — 事件类型（offline / online / registered）
+- `{{client}}` — 服务器名称
+- `{{message}}` — 详细消息（含 IP、OS、地区、CPU 等信息，v1.3.0+）
+- `{{time}}` — 事件时间
 
 ---
 
