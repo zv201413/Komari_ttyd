@@ -14,8 +14,8 @@ RUN curl -SL https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_6
 RUN curl -SL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${TARGETARCH} \
     -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 
-# Komari v1.2.0
-RUN curl -SL https://github.com/komari-monitor/komari/releases/download/1.2.0/komari-linux-${TARGETARCH} \
+# Komari v1.2.1-hotfix (fork: zv201413/komari_new)
+RUN curl -SL https://github.com/zv201413/komari_new/releases/download/v1.2.1-hotfix/komari-linux-${TARGETARCH} \
     -o /usr/local/bin/komari && chmod +x /usr/local/bin/komari
 
 FROM alpine:latest
