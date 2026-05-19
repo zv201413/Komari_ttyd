@@ -21,8 +21,8 @@ RUN case "${TARGETARCH}" in \
 RUN curl -SL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${TARGETARCH} \
     -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 
-# Komari v1.3.0 (fork: zv201413/komari_new)
-RUN curl -SL https://github.com/zv201413/komari_new/releases/download/v1.3.0/komari-linux-${TARGETARCH} \
+# Komari (latest, fork: zv201413/komari_new)
+RUN curl -SL https://github.com/zv201413/komari_new/releases/latest/download/komari-linux-${TARGETARCH} \
     -o /usr/local/bin/komari && chmod +x /usr/local/bin/komari
 
 FROM alpine:latest
