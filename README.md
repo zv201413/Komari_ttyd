@@ -9,8 +9,6 @@
 > 1. **真实的 VPS / 虚拟机**：请直接使用官方后台复制的原始命令（`wget ... install.sh`）在宿主机运行，依赖 `systemd` 最稳定。
 > 2. **PaaS 平台 / 纯容器环境**：脚本自动检测无 systemd 时切换为 nohup 后台模式，无需转换。
 
-<img width="1940" height="643" alt="image" src="https://github.com/user-attachments/assets/0b7b301b-c35a-4551-a628-17667712c88d" />
-
 
 ---
 
