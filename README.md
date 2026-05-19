@@ -200,23 +200,23 @@ TTYD_P3=7683:user3:密码3
 
 ## 🗑️ 探针卸载指南
 
-如果你按照本说明在宿主机或容器中安装了探针（Komari/Nezha Agent），请根据你的**安装方式**选择卸载步骤：
+如果你按照本说明在宿主机或容器中安装了探针（Komari Agent），请根据你的**安装方式**选择卸载步骤：
 
 ### 场景一：真实 VPS（使用官方脚本安装的 systemd 服务）
 如果你在 VPS 上运行了官方安装脚本，探针已经注册为系统服务。
 
 **彻底卸载步骤**：
 ```bash
-# 1. 停止并禁用服务（以 nezha 为例，如果用 komari 请替换 nezha 为 komari）
-sudo systemctl stop nezha-agent
-sudo systemctl disable nezha-agent
+# 1. 停止并禁用服务
+sudo systemctl stop komari-agent
+sudo systemctl disable komari-agent
 
 # 2. 删除服务配置文件
-sudo rm /etc/systemd/system/nezha-agent.service
+sudo rm /etc/systemd/system/komari-agent.service
 sudo systemctl daemon-reload
 
 # 3. 删除探针老巢（极其重要）
-sudo rm -rf /opt/nezha  # 或者是 /opt/komari
+sudo rm -rf /opt/komari
 ```
 
 ### 场景二：纯容器/PaaS（使用通用安装命令或 nohup 模式）
