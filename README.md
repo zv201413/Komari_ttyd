@@ -6,16 +6,7 @@
 > 为了保证容器在各大 PaaS 平台上的极致兼容性，本镜像**已剔除**内置的 Komari Agent。如需监控服务器：
 > 1. **真实的 VPS / 虚拟机**：请直接使用官方后台复制的原始命令（`wget ... install.sh`）在宿主机运行，依赖 `systemd` 最稳定。
 > 2. **PaaS 平台 / 纯容器环境**：脚本自动检测无 systemd 时切换为 nohup 后台模式，无需转换。
->
-> **通用安装命令（VPS/容器均可用）**：
-> ```bash
-> curl -fsSL https://raw.githubusercontent.com/zv201413/komari-agent_new/main/install.sh | bash -s -- -e 你的服务器地址:端口 -t 你的密钥
-> ```
->
-> **管理命令（适用于无 systemd 的容器/PaaS）**：
-> ```bash
-> /opt/komari/agent.sh {start|stop|status|restart|logs}
-> ```
+
 <img width="1940" height="643" alt="image" src="https://github.com/user-attachments/assets/0b7b301b-c35a-4551-a628-17667712c88d" />
 
 
