@@ -20,6 +20,56 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "23"
+
+      - name: Clone and build frontend
+        run: |
+          git clone --depth 1 -b radix https://github.com/zv201413/komari-web_new.git web
+          cd web
+          npm install
+          npm run build
+
+      - name: Clone backend
+        run: |
+          git clone --depth 1 -b main https://github.com/zv201413/komari_new.git komari
+          mkdir -p komari/public/defaultTheme/dist
+          cp -r web/dist/* komari/public/defaultTheme/dist/
+          cp -f web/komari-theme.json komari/public/defaultTheme/
+          if [ -f web/preview.png ]; then cp -f web/preview.png komari/public/defaultTheme/; fi
+          if [ -f web/perview.png ]; then cp -f web/perview.png komari/public/defaultTheme/; fi
+          if [ -f komari/public/defaultTheme/preview.png ] && [ ! -f komari/public/defaultTheme/perview.png ]; then cp -f komari/public/defaultTheme/preview.png komari/public/defaultTheme/perview.png; fi
+          if [ -f komari/public/defaultTheme/perview.png ] && [ ! -f komari/public/defaultTheme/preview.png ]; then cp -f komari/public/defaultTheme/perview.png komari/public/defaultTheme/preview.png; fi
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Install Zig
+        run: |
+          wget https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz
+          sudo tar -C /usr/local -Jxf zig-x86_64-linux-0.14.1.tar.xz
+          echo "PATH=$PATH:/usr/local/zig-x86_64-linux-0.14.1" >> $GITHUB_ENV
+
+      - name: Build static binaries for multi-arch
+        env:
+          CGO_ENABLED: 1
+          GIN_MODE: release
+        run: |
+          cd komari
+          VERSION="latest"
+          VERSION_HASH="${{ github.sha }}"
+          LDFLAGS="-s -w -X github.com/komari-monitor/komari/utils.CurrentVersion=${VERSION} -X github.com/komari-monitor/komari/utils.VersionHash=${VERSION_HASH}"
+
+          echo "Building for linux/amd64..."
+          GOOS=linux GOARCH=amd64 CC="zig cc -target x86_64-linux-musl" go build -trimpath -ldflags="$LDFLAGS" -o ../komari-linux-amd64
+
+          echo "Building for linux/arm64..."
+          GOOS=linux GOARCH=arm64 CC="zig cc -target aarch64-linux-musl" go build -trimpath -ldflags="$LDFLAGS" -o ../komari-linux-arm64
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 

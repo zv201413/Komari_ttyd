@@ -3,3 +3,6 @@ _Archive/
 manifest.yaml
 Project_Summary.md
 Archive_Log.md
+komari-linux-*
+web/
+komari/

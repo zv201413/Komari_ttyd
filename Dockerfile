@@ -21,10 +21,6 @@ RUN case "${TARGETARCH}" in \
 RUN curl -SL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${TARGETARCH} \
     -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 
-# Komari (latest, fork: zv201413/komari_new)
-RUN curl -SL https://github.com/zv201413/komari_new/releases/latest/download/komari-linux-${TARGETARCH} \
-    -o /usr/local/bin/komari && chmod +x /usr/local/bin/komari
-
 FROM alpine:latest
 
 RUN apk add --no-cache \
@@ -34,9 +30,14 @@ RUN apk add --no-cache \
     tzdata \
     bash
 
+ARG TARGETARCH
+
 COPY --from=builder /usr/local/bin/ttyd /usr/local/bin/ttyd
 COPY --from=builder /usr/local/bin/cloudflared /usr/local/bin/cloudflared
-COPY --from=builder /usr/local/bin/komari /usr/local/bin/komari
+
+# Copy pre-built komari binary based on TARGETARCH
+COPY komari-linux-${TARGETARCH} /usr/local/bin/komari
+RUN chmod +x /usr/local/bin/komari
 
 COPY conf/nginx.conf /etc/nginx/http.d/default.conf
 COPY conf/supervisord.conf /etc/supervisord.conf
