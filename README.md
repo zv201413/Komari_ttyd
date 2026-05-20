@@ -12,6 +12,19 @@
 
 ---
 
+## ✨ 相比原版的改进对比 (Improvements Over Original)
+
+本仓库以及配套的 [`komari_new`](https://github.com/zv201413/komari_new) 服务端、[`komari-agent_new`](https://github.com/zv201413/komari-agent_new) 客户端，相比原版 Komari 做出了以下核心改进与修复：
+
+| 改进项 | 原版表现 | 本仓库 (Our Fork) 改进 |
+| :--- | :--- | :--- |
+| **NAT 类型检测** | 无此功能 | **自动探测并直观展示**：客户端（Agent）内置 STUN 探测机制，自动获取本地 NAT 类型（如全锥型、限制型等），并**拼接到 OS（操作系统）信息后方直接展示**。无需修改服务端数据库与前端，安全高效。 |
+| **离线通知宽限期** | 经常失效，断连重连时高频误报 | **并发逻辑重构，彻底修复**：重写了服务端重连时抢占连接锁的同步机制，网络波动重连时，处于宽限期（如 120s）的离线定时器会被完美清空与撤销，避免 Telegram 刷屏。 |
+| **一体化 Docker 打包** | 仅有面板服务 | **多功能单容器集成**：镜像集成了 **ttyd 网页终端**、**Nginx 代理**、**Cloudflare Tunnel 穿透**，专为 Northflank / 爪云 / Zeabur 等 PaaS 平台设计，支持多端口多终端运行。 |
+| **跨平台静态编译** | 需在线编译 | **Zig 多架构交叉编译**：使用 Zig 交叉编译出静态链接的 `linux/amd64` 与 `linux/arm64` 程序，保障在各大 Alpine 镜像及 PaaS 环境中 100% 兼容。 |
+
+---
+
 ## 🚀 推荐部署方案：Northflank（最简单，自带 SSL）
 
 Northflank 会自动为应用分配带 HTTPS 的专属域名。**不需要配置 Tunnel，也不需要搞证书**，这是最推荐的部署方式。
