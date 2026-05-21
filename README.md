@@ -9,7 +9,8 @@
 > 1. **真实的 VPS / 虚拟机**：请直接使用官方后台复制的原始命令（`wget ... install.sh`）在宿主机运行，依赖 `systemd` 最稳定。
 > 2. **PaaS 平台 / 纯容器环境**：脚本自动检测无 systemd 时切换为 nohup 后台模式，无需转换。
 
-
+效果展示：
+<img width="652" height="637" alt="image" src="https://github.com/user-attachments/assets/5afc92ac-1d3d-40fa-9666-8be11f02b9c8" />
 ---
 
 ## ✨ 相比原版的改进对比 (Improvements Over Original)
@@ -26,8 +27,8 @@
 | **非 Root 运行与脚本重定向** | 强制 Root 运行，脚本指向官方源 | **非 Root 部署与专属脚本**：完善了非 root 权限下的安装部署指导，并将自动更新器、`install.sh`、`install.ps1` 脚本的发布包下载路径全部重定向至本 fork 仓库。 |
 | **一体化 Docker 打包** | 仅有面板服务 | **多功能单容器集成**：镜像集成了 **ttyd 网页终端**、**Nginx 代理**、**Cloudflare Tunnel 穿透**，专为 Northflank / 爪云 / Zeabur 等 PaaS 平台设计，支持多端口多终端运行。 |
 | **跨平台静态编译** | 需在线编译 | **Zig 多架构交叉编译**：使用 Zig 交叉编译出静态链接的 `linux/amd64` 与 `linux/arm64` 程序，保障在各大 Alpine 镜像及 PaaS 环境中 100% 兼容。 |
-效果展示：
-<img width="652" height="637" alt="image" src="https://github.com/user-attachments/assets/5afc92ac-1d3d-40fa-9666-8be11f02b9c8" />
+
+
 
 ---
 
