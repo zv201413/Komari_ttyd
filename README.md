@@ -12,7 +12,7 @@
 > > ⚠️ 如果 `wget` 下载失败，请将命令中的 `wget -qO-` 替换为 `curl -sL` 重试。
 
 效果展示：
-<img width="652" height="637" alt="image" src="https://github.com/user-attachments/assets/5afc92ac-1d3d-40fa-9666-8be11f02b9c8" />
+<img width="1815" height="896" alt="26-05-26-00-32-19" src="https://github.com/user-attachments/assets/b4241e9f-1536-4d62-b643-587928c4f6a2" />
 ---
 
 ## ✨ 相比原版的改进对比 (Improvements Over Original)
