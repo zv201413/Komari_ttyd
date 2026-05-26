@@ -57,8 +57,9 @@ Northflank 会自动为应用分配带 HTTPS 的专属域名。**不需要配置
 
 | 变量名 | 值 | 说明 |
 |--------|----|------|
-| `ADMIN_USERNAME` | `admin` | 面板登录账号（可选，不设则随机生成） |
-| `ADMIN_PASSWORD` | `你的复杂密码` | 面板登录密码（**种子密码**：仅在空数据库首次启动时生效，已有管理员后在面板 UI 修改的密码优先级更高） |
+| **`USER_PWD`** | **`admin:你的复杂密码`** | **（必填）** 面板管理员账号密码，格式 `用户名:密码`。仅在首次部署、数据库为空时生效；后续可在后台改密码 |
+| `ADMIN_USERNAME` | `admin` | （旧版兼容）如已设置 `USER_PWD` 则忽略 |
+| `ADMIN_PASSWORD` | `你的复杂密码` | （旧版兼容）如已设置 `USER_PWD` 则忽略 |
 | `TTYD_P0` | `7681:admin:你的密码` | 网页终端 Basic Auth（`port:用户名:密码`），需配合额外端口暴露 |
 | `TTYD_P1` | `7682:user2:密码2` | 第二个 TTYD 终端（可继续 `TTYD_P2`、`TTYD_P3`...） |
 
@@ -87,7 +88,7 @@ Northflank 会自动为应用分配带 HTTPS 的专属域名。**不需要配置
 |--------|--------|
 | **镜像地址** | `ghcr.io/zv201413/komari_ttyd:latest` |
 | **持久化目录** | 挂载到 `/app/data` |
-| **环境变量** | `TUNNEL_TOKEN=eyJh...` (你的 Token)<br>`TTYD_P1=7681:admin:密码`<br>`ADMIN_USERNAME=admin`<br>`ADMIN_PASSWORD=密码` |
+| **环境变量** | `TUNNEL_TOKEN=eyJh...` (你的 Token)<br>`TTYD_P0=7681:admin:密码`<br>`USER_PWD=admin:密码` |
 
 **配置域名解析**：
 去 Cloudflare Tunnel 面板的 Public Hostname 里，添加两条记录：
@@ -106,9 +107,8 @@ docker run -d --name komari \
   -p 8000:80 \
   -p 7681:7681 \
   -v /opt/komari/data:/app/data \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=你的复杂密码 \
-  -e TTYD_P1=7681:admin:你的终端密码 \
+  -e USER_PWD=admin:你的复杂密码 \
+  -e TTYD_P0=7681:admin:你的终端密码 \
   ghcr.io/zv201413/komari_ttyd:latest
 ```
 
@@ -118,29 +118,19 @@ docker run -d --name komari \
 
 ## 🔐 首次登录必看
 
-Komari 强调安全性，**没有固定的默认密码**。
+Komari 强调安全性，**必须设置管理员密码，不设密码不会启动**。
 
-### ⚡ 重要：密码的持久化逻辑
-- `ADMIN_PASSWORD` 环境变量是**种子密码**，**仅在数据库为空时生效**（首次部署）。
-- 一旦你通过面板 UI **修改了密码**，数据库中的记录优先级最高，环境变量会被完全忽略。
-- **必须挂载持久卷到 `/app/data`**，否则每次重启容器数据库都会重建，密码会丢失。
-- **鉴权失败 ≠ 密码变了**：如果你遇到登录问题，先确认 `/app/data` 是否挂载了持久卷。
+### ⚡ 密码的持久化逻辑
+- `USER_PWD`（或旧版 `ADMIN_PASSWORD`）是**种子密码**，仅在数据库为空时生效（首次部署）。
+- 一旦通过面板 UI **修改了密码**，数据库记录优先级最高，环境变量会被忽略。
+- **必须挂载持久卷到 `/app/data`**，否则每次重启数据库重建，密码会丢失。
+- **鉴权失败 ≠ 密码变了**：遇到登录问题，先确认持久卷是否挂载正确。
 
-### 方式一：指定环境变量（推荐）
-在部署时直接通过环境变量写死账号密码：
-- `ADMIN_USERNAME=admin`（可选，默认 `admin`）
-- `ADMIN_PASSWORD=你的复杂密码`（可选，不设则随机生成）
+### 设置管理员账号（必填）
+部署时**必须**设置环境变量：
+- `USER_PWD=admin:你的复杂密码`
 
-> ⚠️ 环境变量仅在**首次启动、数据库为空时**生效。之后在后台改密码，环境变量不再读取。
-
-### 方式二：查看随机生成的密码
-如果你部署时没填环境变量，Komari 会在初次启动时随机生成密码。去你的部署平台查看 **容器日志 (Logs)**，寻找以下字样：
-```text
-Admin username: admin
-Admin password: xxxxxx
-```
-
-> 密码在**有持久卷的前提下，重启容器不会改变**。如果每次重启密码都不一样，说明缺少持久卷。
+> ⚠️ 不设置 `USER_PWD` 且数据库为空时，容器将启动失败并报错。旧版 `ADMIN_USERNAME` + `ADMIN_PASSWORD` 仍兼容。`USER_PWD` 优先级高于旧版变量。
 
 ---
 
