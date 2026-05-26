@@ -22,6 +22,7 @@ LISTEN="${KOMARI_LISTEN:-0.0.0.0:25774}"
 cat > "$CONF_DIR/komari.conf" << SUP
 [program:komari]
 command=/usr/local/bin/komari server -l $LISTEN
+directory=/app
 autorestart=true
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
