@@ -67,7 +67,7 @@ Northflank 会自动为应用分配带 HTTPS 的专属域名。**不需要配置
 
 部署成功后，查看 Northflank 分配的域名（通常在右上角）：
 - **Komari 面板**：`https://xxx.northflank.app`
-- **TTYD 终端**：`https://xxx.northflank.app:7681` （如果启用了端口 2）
+- **TTYD 终端**：Northflank 会自动为额外端口分配独立 URL，可在 Service 的 **Ports** 标签页查看
 
 ---
 
@@ -136,7 +136,7 @@ Komari 强调安全性，**必须设置管理员密码，不设密码不会启�
 
 ## 🔔 配置 Telegram 通知
 
-Komari 内置通知系统，支持在服务器上下线时通过 Telegram 发送通知消息（v1.3.0+ 消息包含 IP、OS、地区、CPU 等详细信息）。
+Komari 内置通知系统，支持在服务器上下线时通过 Telegram 发送通知消息（消息包含 IP、OS、地区、CPU 等详细信息）。
 
 ### 方式一：内置 Telegram 发送器（推荐）
 
@@ -207,7 +207,7 @@ async function sendEvent(event) {
 - `{{emoji}}` — 事件图标（🔴 🟢 🆕）
 - `{{event}}` — 事件类型（offline / online / registered）
 - `{{client}}` — 服务器名称
-- `{{message}}` — 详细消息（含 IP、OS、地区、CPU 等信息，v1.3.0+）
+- `{{message}}` — 详细消息（含 IP、OS、地区、CPU 等信息）
 - `{{time}}` — 事件时间
 
 ---
