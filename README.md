@@ -219,6 +219,10 @@ rm -rf /opt/komari
 | **签到目标日期** | 简单签到 | 支持签到目标日期、间隔、提醒天数/频率 |
 | **点亮全球地图** | 无 | Dashboard 在线/离线节点颜色标记，统计卡片 |
 | **主题管理增强** | 基础设置 | 上传主题包，动态渲染配置界面，select-with-custom 支持 |
+| **Cookie 安全** | session token 明文 HTTP 传输 | Secure flag 动态判断 HTTPS（仅 HTTPS 下发），HttpOnly + SameSite=Lax |
+| **SQLite 稳定性** | 无 busy timeout，并发写入易死锁 | `_busy_timeout=5000` + `_txlock=immediate` + `SetMaxOpenConns(1)` 防止 database is locked |
+| **终端 2FA Sudo Token** | 无 | 终端入口可选 2FA 验证（`Sudo2FaRequired` 默认关闭，需要时在设置中开启）；验证一次后全站 1 小时免密 |
+| **登录限速** | 无 | IP+用户名组合键限速，三档锁定期（5→5min / 10→30min / 15→2h） |
 
 ---
 
