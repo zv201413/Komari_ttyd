@@ -31,7 +31,6 @@ Northflank 会自动为应用分配带 HTTPS 的专属域名。**不需要配置
 | 环境变量 | 值 | 说明 |
 |--------|----|------|
 | **`USER_PWD`** | **`用户名:你的复杂密码`** | 面板管理员账号密码。仅在首次部署、数据库为空时生效；后续可在后台改密码 |
-| `ADMIN_USERNAME` + `ADMIN_PASSWORD` | 旧版兼容，已设 `USER_PWD` 则忽略 |
 | `TTYD_P0` | `7681:admin:你的密码` | 网页终端 Basic Auth（`port:用户名:密码`） |
 | `TTYD_P1` | `7682:user2:密码2` | 第二个 TTYD 终端（可继续 `TTYD_P2`、`TTYD_P3`...） |
 
@@ -42,21 +41,7 @@ Northflank 会自动为应用分配带 HTTPS 的专属域名。**不需要配置
 ### ☁️ 其他 PaaS 平台（爪云 / Zeabur 等）
 
 如果平台不提供 SSL 或不能暴露多端口，推荐配合 **Cloudflare Tunnel**。
-
-**前置准备：获取 Tunnel Token**
-1. 登录 [Cloudflare Zero Trust](https://one.dash.cloudflare.com) → **Networks** → **Tunnels** → **Add a tunnel** (选择 Cloudflared)
-2. 在 Public Hostname 页面点击 **Save tunnel**
-3. 回到列表，点击隧道 `...` 菜单 → **View tunnel token**，复制 `eyJ...` 开头的 Token
-
-| 设置项 | 填写内容 |
-|--------|--------|
-| **镜像地址** | `ghcr.io/zv201413/komari_ttyd:latest` |
-| **持久化目录** | 挂载到 `/app/data` |
-| **环境变量** | `TUNNEL_TOKEN=eyJh...`<br>`TTYD_P0=7681:admin:密码`<br>`USER_PWD=admin:密码` |
-
-**配置域名解析**：在 Cloudflare Tunnel 面板的 Public Hostname 添加：
-- `komari.你的域名.com` → `http://localhost:80`
-- `ttyd.你的域名.com` → `http://localhost:7681`
+详细的 Tunnel 配置步骤，请参阅：[**高级用法与原理指南：Cloudflare Tunnel 配置**](./ADVANCED_GUIDE.md#☁️-cloudflare-tunnel-详细配置指南)
 
 ### 💻 自建服务器 (Docker)
 
@@ -77,25 +62,14 @@ docker run -d --name komari \
 
 ## 🔐 首次登录 & 密码管理
 
-**必须设置管理员密码，不设密码不会启动。**
-
-### 密码持久化逻辑
-- `USER_PWD`（或旧版 `ADMIN_PASSWORD`）是**种子密码**，仅在数据库为空时生效（首次部署）。
-- 一旦通过面板 UI **修改了密码**，数据库记录优先级最高，环境变量会被忽略。
-- **必须挂载持久卷到 `/app/data`**，否则每次重启数据库重建，密码会丢失。
-- **鉴权失败 ≠ 密码变了**：遇到登录问题，先确认持久卷是否挂载正确。
+**必须设置管理员密码，不设密码不会启动。** 密码的环境变量仅在**首次部署**时生效，后续优先级以数据库内你修改的为准。
+详细的密码持久化与覆盖逻辑，请参阅：[**高级用法与原理指南：密码持久化深度逻辑**](./ADVANCED_GUIDE.md#🧠-密码持久化深度逻辑)
 
 ### 设置管理员账号（必填）
 ```bash
-# 推荐（新版）
 USER_PWD=admin:你的复杂密码
-
-# 旧版兼容（同时设置）
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=你的复杂密码
 ```
-
-> ⚠️ 不设置 `USER_PWD` 且数据库为空时，容器将启动失败并报错。
+> ⚠️ 必须挂载持久卷到 `/app/data`，否则每次重启数据库重建，密码会丢失。
 
 ---
 
@@ -108,7 +82,7 @@ TTYD_P0=7681:admin:密码1
 TTYD_P1=7682:user2:密码2
 TTYD_P2=7683:user3:密码3
 ```
-*格式：`TTYD_P序号=端口:用户名:密码`。增加端口后，记得在部署平台或 Cloudflare Tunnel 中放行对应的端口号。*
+*格式：`TTYD_P序号=端口:用户名:密码`。增加端口后，记得在部署平台放行对应的端口号。*
 
 > 🔒 **安全说明**：ttyd 未开启 HTTPS，建议通过 Nginx 反代或 Cloudflare Tunnel 暴露，避免明文传输密码。
 
@@ -116,9 +90,8 @@ TTYD_P2=7683:user3:密码3
 
 ## 🔔 Telegram 通知配置
 
-Komari 内置通知系统，支持在服务器上下线时通过 Telegram 发送通知（包含 IP、OS、地区、CPU 等详细信息）。
-
-### 方式一：内置 Telegram 发送器（推荐）
+Komari 内置通知系统，支持在服务器上下线时通过 Telegram 发送通知。
+如需使用更高级的自定义 JS 通知网关或自定义排版模板，请参阅：[**高级用法与原理指南：自定义通知配置**](./ADVANCED_GUIDE.md#💻-javascript-自定义通知发送器-高级)
 
 登录面板后 → **设置 (Settings)** → **通知 (Notifications)**：
 1. 开启 **启用通知**
@@ -130,55 +103,8 @@ Komari 内置通知系统，支持在服务器上下线时通过 Telegram 发送
 | `bot_token` | `你的BOT_TOKEN` |
 | `chat_id` | `你的CHAT_ID` |
 | `endpoint` | `https://api.telegram.org/bot`（默认） |
-| `message_thread_id` | 留空（仅超级群组话题需要） |
 
 4. 保存后点击 **测试 (Test Send)** 验证
-
-### 方式二：JavaScript 发送器（高级）
-
-适用于自定义排版、多平台通知等场景，选择 `Javascript` 方式编写自定义脚本：
-
-```javascript
-async function sendMessage(message, title) {
-  const url = `https://api.telegram.org/bot<你的BOT_TOKEN>/sendMessage`;
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      chat_id: '<你的CHAT_ID>',
-      text: `<b>${title}</b>\n${message}`,
-      parse_mode: 'HTML'
-    })
-  });
-  return resp.ok;
-}
-
-async function sendEvent(event) {
-  // event 对象: event, clients, message, time, emoji
-  // clients[0]: name, ipv4, ipv6, os, arch, cpu_cores, region ...
-  const client = event.clients[0];
-  const text = `${event.emoji} ${client.name}\n`
-    + `IP: ${client.ipv4}\n`
-    + `OS: ${client.os}\n`
-    + `Event: ${event.event}\n`
-    + `Time: ${event.time}`;
-  return await sendMessage(text, event.event);
-}
-```
-
-### 通知模板
-
-当使用非 JavaScript 发送器时，通知内容由 **通知模板** 控制（设置 → 通知中自定义）：
-
-```
-{{emoji}}{{emoji}}{{emoji}}
-事件：{{event}}
-服务器：{{client}}
-消息：{{message}}
-时间：{{time}}
-```
-
-可用变量：`{{emoji}}`（事件图标）、`{{event}}`（事件类型）、`{{client}}`（服务器名称）、`{{message}}`（详细消息）、`{{time}}`（事件时间）
 
 ---
 
@@ -212,16 +138,11 @@ rm -rf /opt/komari
 | **容器内 CPU 小数核心** | int 类型，0.25 核显示为 1 核 | float64 精度支持，正确展示 fractional CPU |
 | **Cgroup 内存限制识别** | 读物理内存 | 支持读取 cgroup 真实内存限额与占用率 |
 | **Telegram 通知增强** | 仅上下线名字 | 富文本：IP、OS+架构、Region、CPU、事件时间 |
-| **非 Root 部署** | 强制 Root | 完善非 root 安装指导，脚本重定向至本 fork |
 | **一体化 Docker** | 仅有面板 | 集成 ttyd + Nginx + Cloudflare Tunnel，专为 PaaS 设计 |
 | **跨平台静态编译** | 需在线编译 | Zig 交叉编译 `linux/amd64` + `linux/arm64` |
-| **图片直传** | 仅 URL | 支持直接上传图片文件（≤10MB），自动填入 URL |
-| **签到目标日期** | 简单签到 | 支持签到目标日期、间隔、提醒天数/频率 |
-| **点亮全球地图** | 无 | Dashboard 在线/离线节点颜色标记，统计卡片 |
-| **主题管理增强** | 基础设置 | 上传主题包，动态渲染配置界面，select-with-custom 支持 |
-| **Cookie 安全** | session token 明文 HTTP 传输 | Secure flag 动态判断 HTTPS（仅 HTTPS 下发），HttpOnly + SameSite=Lax |
-| **SQLite 稳定性** | 无 busy timeout，并发写入易死锁 | `_busy_timeout=5000` + `_txlock=immediate` + `SetMaxOpenConns(1)` 防止 database is locked |
-| **终端 2FA Sudo Token** | 无 | 终端入口可选 2FA 验证（`Sudo2FaRequired` 默认关闭，需要时在设置中开启）；验证一次后全站 1 小时免密 |
+| **Cookie 安全** | session token 明文传输 | Secure flag 动态判断 HTTPS，HttpOnly + SameSite=Lax |
+| **SQLite 稳定性** | 并发写入易死锁 | 注入 `_busy_timeout` 与单连接池防止 database is locked |
+| **终端 2FA Sudo Token** | 无 | 终端入口可选 2FA 验证；验证一次后全站 1 小时免密 |
 | **登录限速** | 无 | IP+用户名组合键限速，三档锁定期（5→5min / 10→30min / 15→2h） |
 
 ---
