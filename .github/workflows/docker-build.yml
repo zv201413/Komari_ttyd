@@ -60,7 +60,7 @@ jobs:
           GIN_MODE: release
         run: |
           cd komari
-          VERSION="latest"
+          VERSION="v2.0.0"
           VERSION_HASH="${{ github.sha }}"
           LDFLAGS="-s -w -X github.com/komari-monitor/komari/utils.CurrentVersion=${VERSION} -X github.com/komari-monitor/komari/utils.VersionHash=${VERSION_HASH}"
 
@@ -91,4 +91,5 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.LOWERCASE_REPO }}:latest
+            ${{ env.REGISTRY }}/${{ env.LOWERCASE_REPO }}:v2.0.0
             ${{ env.REGISTRY }}/${{ env.LOWERCASE_REPO }}:${{ github.sha }}
