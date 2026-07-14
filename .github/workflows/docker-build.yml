@@ -12,6 +12,13 @@ on:
         required: false
         type: string
 
+# 自动构建（push / 上游 dispatch）归入同一并发组并取消进行中的旧构建，
+# 避免连续推送触发多次重复构建；手动构建各自独立分组，永不被取消，
+# 以免正在打永久版本标签的构建被打断。
+concurrency:
+  group: docker-build-${{ github.event_name == 'workflow_dispatch' && github.run_id || 'auto' }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
 env:
   IMAGE_NAME: komari-ttyd
   REGISTRY: ghcr.io
