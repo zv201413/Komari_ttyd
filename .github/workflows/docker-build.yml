@@ -6,6 +6,11 @@ on:
   repository_dispatch:
     types: [upstream-updated]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号（如 v2.1.0）。填写后会打成永久版本标签并同时更新 latest；留空则只覆盖 latest。"
+        required: false
+        type: string
 
 env:
   IMAGE_NAME: komari-ttyd
@@ -56,13 +61,34 @@ jobs:
           sudo tar -C /usr/local -Jxf zig-x86_64-linux-0.14.1.tar.xz
           echo "PATH=$PATH:/usr/local/zig-x86_64-linux-0.14.1" >> $GITHUB_ENV
 
+      - name: Resolve version and image tags
+        id: meta
+        run: |
+          REPO="${{ env.REGISTRY }}/${{ env.LOWERCASE_REPO }}"
+          INPUT_VER="${{ github.event.inputs.version }}"
+          if [ -n "$INPUT_VER" ]; then
+            # 手动构建并填写了版本号：打永久版本标签，同时更新 latest
+            VERSION="$INPUT_VER"
+          else
+            # 自动构建（push / 上游 dispatch）或手动未填版本：只覆盖 latest 滚动标签
+            VERSION="snapshot-$(date -u +%Y%m%d)-$(echo '${{ github.sha }}' | cut -c1-7)"
+          fi
+          {
+            echo "version=$VERSION"
+            echo "tags<<EOF"
+            echo "$REPO:latest"
+            [ -n "$INPUT_VER" ] && echo "$REPO:$INPUT_VER"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Resolved VERSION=$VERSION"
+
       - name: Build static binaries for multi-arch
         env:
           CGO_ENABLED: 1
           GIN_MODE: release
         run: |
           cd komari
-          VERSION="v2.0.0"
+          VERSION="${{ steps.meta.outputs.version }}"
           VERSION_HASH="${{ github.sha }}"
           LDFLAGS="-s -w -X github.com/komari-monitor/komari/utils.CurrentVersion=${VERSION} -X github.com/komari-monitor/komari/utils.VersionHash=${VERSION_HASH}"
 
@@ -91,7 +117,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.LOWERCASE_REPO }}:latest
-            ${{ env.REGISTRY }}/${{ env.LOWERCASE_REPO }}:v2.0.0
-            ${{ env.REGISTRY }}/${{ env.LOWERCASE_REPO }}:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
