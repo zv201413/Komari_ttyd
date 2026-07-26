@@ -49,18 +49,19 @@ jobs:
       - name: Clone backend
         run: |
           git clone --depth 1 -b main https://github.com/zv201413/komari_new.git komari
-          mkdir -p komari/public/defaultTheme/dist
-          cp -r web/dist/* komari/public/defaultTheme/dist/
-          cp -f web/komari-theme.json komari/public/defaultTheme/
-          if [ -f web/preview.png ]; then cp -f web/preview.png komari/public/defaultTheme/; fi
-          if [ -f web/perview.png ]; then cp -f web/perview.png komari/public/defaultTheme/; fi
-          if [ -f komari/public/defaultTheme/preview.png ] && [ ! -f komari/public/defaultTheme/perview.png ]; then cp -f komari/public/defaultTheme/preview.png komari/public/defaultTheme/perview.png; fi
-          if [ -f komari/public/defaultTheme/perview.png ] && [ ! -f komari/public/defaultTheme/preview.png ]; then cp -f komari/public/defaultTheme/perview.png komari/public/defaultTheme/preview.png; fi
+          # 上游重构后 go:embed 位置从 public/ 移到 web/public/（见 komari/web/public/public.go）
+          mkdir -p komari/web/public/defaultTheme/dist
+          cp -r web/dist/* komari/web/public/defaultTheme/dist/
+          cp -f web/komari-theme.json komari/web/public/defaultTheme/
+          if [ -f web/preview.png ]; then cp -f web/preview.png komari/web/public/defaultTheme/; fi
+          if [ -f web/perview.png ]; then cp -f web/perview.png komari/web/public/defaultTheme/; fi
+          if [ -f komari/web/public/defaultTheme/preview.png ] && [ ! -f komari/web/public/defaultTheme/perview.png ]; then cp -f komari/web/public/defaultTheme/preview.png komari/web/public/defaultTheme/perview.png; fi
+          if [ -f komari/web/public/defaultTheme/perview.png ] && [ ! -f komari/web/public/defaultTheme/preview.png ]; then cp -f komari/web/public/defaultTheme/perview.png komari/web/public/defaultTheme/preview.png; fi
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.25"
 
       - name: Install Zig
         run: |
