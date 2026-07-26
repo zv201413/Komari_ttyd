@@ -4,6 +4,31 @@
 
 这是一个高度精简的 Docker 镜像，在极低资源占用的前提下，同时运行 **Komari 监控面板** 与 **网页终端（TTYD）**。
 
+## 相比上游 komari-monitor 的差异
+
+本镜像由 fork 仓库构建：服务端 [komari_new](https://github.com/zv201413/komari_new) · 探针 [komari-agent_new](https://github.com/zv201413/komari-agent_new) · 前端 [komari-web_new](https://github.com/zv201413/komari-web_new)（radix 分支）。
+
+**服务端增强**
+- 节点签到系统：target/interval 两种模式，到期提醒联动
+- 登录限速器：IP|用户名组合键三阶梯锁定，信任代理 + X-Real-IP 防伪造
+- 终端 sudo-2FA：登录时验过 2FA 即下发 sudo_token，开终端免重复输码（可开关）
+- 流量校正：面板可直接设置真实已用流量（换算偏移量存储），上传/下载独立
+- 动态月份续费（月末日期夹取）、节点前台隐藏（仅管理员可见）
+- TCP 拥塞算法（tcp_cc）展示、图片上传接口
+
+**探针增强**
+- NAT 类型检测（--check-nat-type）、TCP 拥塞算法上报
+- cgroup 感知的容器 CPU 配额核数
+- 安装脚本：curl/wget 双通道下载、无 systemd 环境自动 nohup 兜底、--run-in-background；默认从本 fork 拉取
+
+**前端（radix 分支）**
+- PurCarte 前台布局与玻璃 UI/背景系统（多背景图、焦点/缩放、移动端独立背景、预览比例编辑器）
+- 隐藏节点徽章、签到界面、sudo-2FA 对话框
+
+**已同步的上游更新（2026-07）**
+- metric store 存储引擎、REST→JSON-RPC 重构、安装向导与数据库恢复页
+- xterm 6 与终端设置、每图表时间范围选择、非 root 安装（systemd user service）
+
 
 ## 🚀 快速部署
 
