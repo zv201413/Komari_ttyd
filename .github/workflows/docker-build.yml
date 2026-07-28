@@ -61,13 +61,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.24"
 
       - name: Install Zig
         run: |
-          wget https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz
-          sudo tar -C /usr/local -Jxf zig-x86_64-linux-0.14.1.tar.xz
-          echo "PATH=$PATH:/usr/local/zig-x86_64-linux-0.14.1" >> $GITHUB_ENV
+          wget https://ziglang.org/download/0.14.0/zig-x86_64-linux-0.14.0.tar.xz
+          sudo tar -C /usr/local -Jxf zig-x86_64-linux-0.14.0.tar.xz
+          echo "PATH=$PATH:/usr/local/zig-x86_64-linux-0.14.0" >> $GITHUB_ENV
 
       - name: Resolve version and image tags
         id: meta
