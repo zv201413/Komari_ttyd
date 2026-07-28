@@ -3,6 +3,11 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [main]
+    # 纯文档改动不触发镜像重建；仍可通过 workflow_dispatch 手动构建
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
   repository_dispatch:
     types: [upstream-updated]
   workflow_dispatch:
