@@ -6,7 +6,18 @@
 
 本镜像由 fork 仓库构建，相比上游 komari-monitor 有大量增强。👉 [查看完整增强特性说明](https://github.com/zv201413/komari_new/blob/main/docs/features.md)
 
-主要亮点：登录自定义记住天数、全局时区设置、签到管理、NAT 类型检测、点亮全球地图、图片直传、Agent 自动更新、终端 sudo-2FA 等。
+| 功能 | 上游 Komari | 本 Fork 增强 |
+|------|:---:|------|
+| 🔐 登录会话 | 固定时长 | 自定义"记住我"天数（1–365），不勾选则会话级 Cookie |
+| 🌐 全局时区 | ❌ | 后台配置 IANA 时区，全站时间显示统一 |
+| 🖼️ 图片直传 | ❌ | 背景图 / Logo 直传服务器，无需外部图床 |
+| 📱 横竖屏背景 | ❌ | 桌面 / 移动端独立设置，支持亮 / 暗双图 |
+| ✅ 签到管理 | ❌ | 截止日期 / 间隔 / 提醒，Dashboard 显示状态 |
+| 🌐 NAT 类型检测 | ❌ | Agent 基于 STUN 自动检测并在面板展示 |
+| 🗺️ 点亮全球地图 | ❌ | Dashboard 顶部标记所有节点地理位置 |
+| 🖥️ 系统信息 | 基础 | TCP 拥塞算法、CPU 浮点核数、cgroup 内存、负载 |
+| 🔧 Agent | 基础 | 非 Root 安装、内置自动更新、三层保活 |
+| 📦 Docker 镜像 | 基础 | 集成 ttyd 网页终端 + Cloudflare Tunnel + Nginx |
 
 <img width="1815" height="896" alt="screenshot" src="https://github.com/user-attachments/assets/b4241e9f-1536-4d62-b643-587928c4f6a2" />
 
