@@ -21,6 +21,8 @@
 
 <img width="1815" height="896" alt="screenshot" src="https://github.com/user-attachments/assets/b4241e9f-1536-4d62-b643-587928c4f6a2" />
 
+<img width="2461" height="1233" alt="image" src="https://github.com/user-attachments/assets/4b7f6d0b-123b-449a-9aed-98472e58cff6" />
+
 ## 🚀 快速部署
 
 ### Northflank（最简单，自带 SSL）
