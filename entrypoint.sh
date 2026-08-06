@@ -4,6 +4,40 @@ set -e
 CONF_DIR=/etc/supervisor/conf.d
 mkdir -p "$CONF_DIR"
 
+# ── nginx real_ip ──
+# komari 只信任 127.0.0.1 并读 X-Real-IP（见 internal/server/runtime.go），
+# 而 X-Real-IP 由本文件下方 nginx.conf 用 $remote_addr 生成，
+# 所以「$remote_addr 有没有被还原成真实客户端 IP」直接决定 IP 白名单、
+# 登录限速、审计日志是否可用。信任范围写窄是为了防伪造：只有 TCP 对端
+# 落在可信网段时，nginx 才采信请求头里的 IP。
+if [ -n "$TUNNEL_TOKEN" ]; then
+    # cloudflared 与 nginx 同容器，隧道来的连接对端恒为回环地址
+    DEFAULT_HEADER="CF-Connecting-IP"
+    DEFAULT_CIDR="127.0.0.1/32,::1/128"
+else
+    # 平台 LB（Northflank / 爪云 / Zeabur 等）从私有网段发起连接
+    DEFAULT_HEADER="X-Forwarded-For"
+    DEFAULT_CIDR="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32"
+fi
+
+REAL_IP_HEADER="${REAL_IP_HEADER:-$DEFAULT_HEADER}"
+TRUSTED_PROXY_CIDR="${TRUSTED_PROXY_CIDR:-$DEFAULT_CIDR}"
+
+: > /etc/nginx/realip.inc
+# 用 if 而非 `[ -n ] && echo`：后者在末项为空时（如 CIDR 串带尾随逗号）
+# 返回非零，作为循环体最后一条语句会让管道子 shell 非零退出，撞上 set -e。
+echo "$TRUSTED_PROXY_CIDR" | tr ',' '\n' | while read -r cidr; do
+    if [ -n "$cidr" ]; then
+        echo "set_real_ip_from $cidr;" >> /etc/nginx/realip.inc
+    fi
+done
+cat >> /etc/nginx/realip.inc <<SUP
+real_ip_header $REAL_IP_HEADER;
+real_ip_recursive on;
+SUP
+
+echo "[INFO] real IP: header=$REAL_IP_HEADER trusted=$TRUSTED_PROXY_CIDR"
+
 # ── nginx ──
 cat > "$CONF_DIR/nginx.conf" << 'SUP'
 [program:nginx]

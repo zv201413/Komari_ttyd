@@ -35,7 +35,7 @@
 | 设置项 | 填写内容 |
 |--------|--------|
 | **镜像地址** | `ghcr.io/zv201413/komari_ttyd:latest` |
-| **端口 1** | `25774`（Komari 面板） |
+| **端口 1** | `80`（Komari 面板，经容器内 Nginx） |
 | **端口 2** | `7681`（TTYD 网页终端） |
 | **持久化存储** | 挂载路径 `/app/data`（必填） |
 
@@ -45,7 +45,10 @@
 | `TTYD_P0` | `7681:admin:密码` | 网页终端 Basic Auth（`port:用户名:密码`） |
 | `TTYD_P1` | `7682:user2:密码2` | 第二个终端（可继续 `TTYD_P2`...） |
 
-> ⚠️ **端口变更（2026-07）**：面板端口由 `80` 改为 `25774`。老部署升级后若打不开面板，把平台端口配置从 80 改成 25774，或用 `KOMARI_LISTEN=0.0.0.0:80` 改回。
+> ⚠️ **对外端口必须是 `80`，不要填 `25774`**。`25774` 是容器内 komari 进程的监听端口，
+> 平台直接暴露它会**旁路 Nginx** —— 于是 komari 只能看到平台负载均衡的内网地址
+> （`10.x.x.x`），导致 **IP 白名单永久失效、登录限速可被绕过、审计日志记错 IP**。
+> 走 `80` 才有 Nginx 还原真实客户端 IP 再交给 komari。
 
 ### ☁️ 其他 PaaS（爪云 / Zeabur 等）
 
@@ -56,7 +59,7 @@
 ```bash
 docker run -d --name komari \
   --restart unless-stopped \
-  -p 8000:25774 \
+  -p 8000:80 \
   -p 7681:7681 \
   -v /opt/komari/data:/app/data \
   -e USER_PWD=admin:你的复杂密码 \
@@ -89,10 +92,44 @@ docker run -d --name komari \
 | **增删白名单本身** | ✅ 强制校验 |
 | 网页终端（ttyd / xterm） | ✅ 不受白名单影响，仍走 `sudo_token` |
 
-> ⚠️ **反代部署必读**：白名单比对的是 `c.ClientIP()`。镜像内 Nginx 已配置
-> `SetTrustedProxies(["127.0.0.1","::1"])` + `X-Real-IP`，防止 `X-Forwarded-For` 伪造。
-> 若你在镜像外再套一层反代（Cloudflare Tunnel / 平台 LB），**必须确保最外层正确写入 `X-Real-IP`**，
-> 否则白名单会匹配到反代自身的 IP —— 那等于对所有来源免除 2FA。
+> ⚠️ **反代部署必读**：白名单比对的是 `c.ClientIP()`，等价于容器内 Nginx 还原出的
+> `$remote_addr`。Nginx 按部署方式自动选择还原规则（`entrypoint.sh` 生成）：
+>
+> | 部署方式 | 采信的请求头 | 信任的 TCP 对端 |
+> |------|------|------|
+> | 设了 `TUNNEL_TOKEN`（Cloudflare Tunnel） | `CF-Connecting-IP` | `127.0.0.1`、`::1` |
+> | 未设（Northflank / 爪云 / Zeabur 等平台 LB） | `X-Forwarded-For` | 私有网段 `10/8`、`172.16/12`、`192.168/16` |
+>
+> 两个环境变量可覆盖：`REAL_IP_HEADER`、`TRUSTED_PROXY_CIDR`（逗号分隔多个网段）。
+> 信任范围**故意写窄**：只有 TCP 对端落在可信网段时 Nginx 才采信请求头，
+> 否则任何人都能伪造 `X-Forwarded-For` 冒充白名单 IP。别改成 `0.0.0.0/0`。
+
+**排查：白名单加了却仍要输 2FA**
+
+看后台「审计日志」里 `login` 那行记的 IP：
+
+| 日志中的 IP | 含义 | 修法 |
+|------|------|------|
+| 你的公网 IP | 还原正常 | 确认白名单里加的是**这个** IP，而非从别处查到的 |
+| `10.x` / `172.x` / `192.168.x` | 拿到的是反代内网地址，白名单必然失效 | 见下 |
+
+内网地址说明真实 IP 没还原成功，按顺序查：
+
+1. **平台对外端口是不是 `80`** —— 填 `25774` 会旁路 Nginx，这是最常见的原因
+2. **平台到底传了哪个头** —— 进容器临时加个探测端点：
+
+   ```bash
+   cp /etc/nginx/http.d/default.conf /tmp/bak.conf
+   sed -i '/client_max_body_size/a \    location = /_debug_ip { default_type text/plain; return 200 "remote_addr=$remote_addr\\nXFF=$http_x_forwarded_for\\nCF=$http_cf_connecting_ip\\n"; }' /etc/nginx/http.d/default.conf
+   nginx -t && nginx -s reload
+   ```
+
+   访问 `https://你的域名/_debug_ip`：
+   - 返回面板首页而非纯文本 → 流量没进 Nginx，回第 1 步
+   - `XFF=` 是公网 IP 而 `remote_addr=` 是内网 → 正常，说明配置已生效
+   - 两者都是内网、且各头皆空 → 平台未透传，只能改用 Cloudflare Tunnel
+
+   查完务必还原：`cp /tmp/bak.conf /etc/nginx/http.d/default.conf && nginx -s reload`
 
 > 未启用 2FA 的账号：白名单不产生任何效果（本来就不需要动态码）。
 
