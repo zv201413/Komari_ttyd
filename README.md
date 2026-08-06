@@ -50,7 +50,7 @@
 > （`10.x.x.x`），导致 **IP 白名单永久失效、登录限速可被绕过、审计日志记错 IP**。
 > 走 `80` 才有 Nginx 还原真实客户端 IP 再交给 komari。
 
-### ☁️ 其他 PaaS（爪云 / Zeabur 等）
+### ☁️ 其他 PaaS（Justrunmy.app / Zeabur 等）
 
 不提供 SSL 或不能暴露多端口时，推荐配合 Cloudflare Tunnel。详见：[高级用法指南](./ADVANCED_GUIDE.md#☁️-cloudflare-tunnel-详细配置指南)
 
