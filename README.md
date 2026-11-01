@@ -6,6 +6,8 @@
 
 本镜像由 fork 仓库构建，相比上游 komari-monitor 有大量增强。👉 [查看完整增强特性说明](https://github.com/zv201413/komari_new/blob/main/docs/features.md)
 
+手动运行 `Build and Push Docker Image` 工作流时，可填写 `frontend_ref` / `backend_ref` 固定前后端提交，留空则分别使用 `radix` / `main`。填写 `version` 会同时发布永久版本标签和 `latest`，镜像标签记录实际前后端提交，后端版本 Hash 对应后端源码。
+
 | 功能 | 上游 Komari | 本 Fork 增强 |
 |------|:---:|------|
 | 🔐 登录会话 | 固定时长 | 自定义"记住我"天数（1–365），不勾选则会话级 Cookie；IP 白名单免 2FA |
@@ -87,7 +89,8 @@ docker run -d --name komari \
 |------|:---:|
 | 从白名单 IP 登录 | ❌ 免输动态码 |
 | 从其他 IP 登录 | ✅ 正常校验 |
-| **增删白名单本身** | ✅ 强制校验 |
+| **新增白名单 IP** | ✅ 强制校验 |
+| **删除白名单 IP** | ❌ 管理员登录后确认即可 |
 | 网页终端（ttyd / xterm） | ✅ 不受白名单影响，仍走 `sudo_token` |
 
 > ⚠️ **反代部署必读**：白名单比对的是 `c.ClientIP()`，等价于容器内 Nginx 还原出的

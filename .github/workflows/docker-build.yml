@@ -16,6 +16,14 @@ on:
         description: "版本号（如 v2.1.0）。填写后会打成永久版本标签并同时更新 latest；留空则只覆盖 latest。"
         required: false
         type: string
+      frontend_ref:
+        description: "前端分支或提交 SHA；留空使用 radix。"
+        required: false
+        type: string
+      backend_ref:
+        description: "后端分支或提交 SHA；留空使用 main。"
+        required: false
+        type: string
 
 # 自动构建（push / 上游 dispatch）归入同一并发组并取消进行中的旧构建，
 # 避免连续推送触发多次重复构建；手动构建各自独立分组，永不被取消，
@@ -45,15 +53,23 @@ jobs:
           node-version: "23"
 
       - name: Clone and build frontend
+        env:
+          FRONTEND_REF: ${{ inputs.frontend_ref || 'radix' }}
         run: |
           git clone --depth 1 -b radix https://github.com/zv201413/komari-web_new.git web
+          git -C web fetch --depth 1 origin "$FRONTEND_REF"
+          git -C web checkout --detach FETCH_HEAD
           cd web
           npm install
           npm run build
 
       - name: Clone backend
+        env:
+          BACKEND_REF: ${{ inputs.backend_ref || 'main' }}
         run: |
           git clone --depth 1 -b main https://github.com/zv201413/komari_new.git komari
+          git -C komari fetch --depth 1 origin "$BACKEND_REF"
+          git -C komari checkout --detach FETCH_HEAD
           # 上游重构后 go:embed 位置从 public/ 移到 web/public/（见 komari/web/public/public.go）
           mkdir -p komari/web/public/defaultTheme/dist
           cp -r web/dist/* komari/web/public/defaultTheme/dist/
@@ -62,6 +78,12 @@ jobs:
           if [ -f web/perview.png ]; then cp -f web/perview.png komari/web/public/defaultTheme/; fi
           if [ -f komari/web/public/defaultTheme/preview.png ] && [ ! -f komari/web/public/defaultTheme/perview.png ]; then cp -f komari/web/public/defaultTheme/preview.png komari/web/public/defaultTheme/perview.png; fi
           if [ -f komari/web/public/defaultTheme/perview.png ] && [ ! -f komari/web/public/defaultTheme/preview.png ]; then cp -f komari/web/public/defaultTheme/perview.png komari/web/public/defaultTheme/preview.png; fi
+
+      - name: Record source revisions
+        id: sources
+        run: |
+          echo "frontend_sha=$(git -C web rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "backend_sha=$(git -C komari rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -102,7 +124,7 @@ jobs:
         run: |
           cd komari
           VERSION="${{ steps.meta.outputs.version }}"
-          VERSION_HASH="${{ github.sha }}"
+          VERSION_HASH="${{ steps.sources.outputs.backend_sha }}"
           LDFLAGS="-s -w -X github.com/komari-monitor/komari/utils.CurrentVersion=${VERSION} -X github.com/komari-monitor/komari/utils.VersionHash=${VERSION_HASH}"
 
           echo "Building for linux/amd64..."
@@ -131,3 +153,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            io.komari.frontend.revision=${{ steps.sources.outputs.frontend_sha }}
+            io.komari.backend.revision=${{ steps.sources.outputs.backend_sha }}
