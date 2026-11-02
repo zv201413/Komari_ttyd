@@ -174,3 +174,8 @@ sudo rm -rf /opt/komari
 # nohup 环境
 /opt/komari/agent.sh stop && rm -rf /opt/komari
 ```
+
+## 工作区架构与 IPv6-only 探针
+
+服务端、默认前端、探针和 Deer 的职责，以及默认开启、可关闭的第三方 DNS64/NAT64，
+见 [工作区总览](docs/workspace-overview.md)。该总览是 `/home/zv/github/komari/README.md` 的远端副本。
